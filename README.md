@@ -314,3 +314,96 @@ Score = sum(log probabilities) / length^α
 - FFN: per-token transformation
 
 - Masking: prevents future leakage
+
+---
+
+<br>
+<br>
+
+# Other Concepts
+
+## Special Tokens
+
+> Special tokens are predefined tokens added to the input sequence to guide the transformer’s behavior for specific tasks
+
+> Special tokens keeps the input consistent and helps the transformer understand the input structure
+
+
+### CLS (Classification Token) 
+> Placed at the beginning of the input sequence
+
+- Represents the entire sequence  
+- Final hidden state of this token is used for classification tasks  
+
+Example: <br>
+[CLS] I love AI
+
+
+Used in:
+- Text classification  
+- Sentiment analysis  
+
+---
+
+### SEP (Separator Token) 
+> Used to separate different segments of text  
+
+Example: <br>
+[CLS] Sentence A [SEP] Sentence B [SEP]
+
+
+Used in:
+- Sentence pair classification  
+- Question answering  
+
+---
+
+### PAD (Padding Token)
+> Used to make all sequences in a batch the same length  
+
+- Ensures efficient parallel processing  
+- Ignored during attention using masking  
+
+Example: <br>
+[I, love, AI, PAD, PAD]
+
+
+---
+
+### Truncation
+> Cuts longer sequences to a fixed maximum length  
+
+- Prevents memory overflow  
+- Ensures consistent input size  
+
+---
+
+### MASK Token
+> Used in masked language modeling (MLM)  
+
+- Model predicts the masked word using context  
+
+Example: <br>
+I love [MASK] life
+
+
+Used in:
+- Pretraining models like BERT  
+
+---
+
+### Task-Specific Tokens
+
+> Custom tokens introduced for specific tasks  
+
+Examples: <br>
+[SOURCE] Hello [TARGET] Bonjour
+
+
+- Helps model distinguish different roles in input  
+- Common in:
+  - Machine translation  
+  - Instruction tuning  
+  - Multi-task learning  
+
+---

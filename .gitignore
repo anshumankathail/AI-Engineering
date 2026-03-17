@@ -1,2 +1,6 @@
+# saved models
+models/
+
+# misc
 .venv/
 .env
