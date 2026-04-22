@@ -1,6 +1,9 @@
 # saved models
 models/
 
+# saved vector db
+vectordb/
+
 # misc
 .venv/
 .env
