@@ -4,6 +4,8 @@
   <img src="assets/transformer.png" width="400"/>
 </p>
 
+<br>
+
 ## 1. Overview
 
 The Transformer is a sequence-to-sequence model that processes input data in parallel using attention mechanisms instead of recurrence
@@ -13,6 +15,7 @@ A Transformer models:
 ```
 P(y_t | y_{<t}, x)
 ```
+<br>
 
 ## 2. Embedding Phase
 
@@ -54,6 +57,7 @@ Final input:
 ```
 X = X_embed + X_pos
 ```
+<br>
 
 ## 3. Encoder
 
@@ -143,6 +147,8 @@ W_2 ∈ ℝ^{d_ff × d_model}
 Enc_out = LayerNorm(X + FFN(X))
 ```
 
+<br>
+
 ## 4. Decoder
 
 > Nx decoder layers are stacked where each decoder is fed output from the previous decoder as input
@@ -213,6 +219,7 @@ FFN(X) = σ(X W_1 + b_1) W_2 + b_2
 ```
 Z = LayerNorm(X + FFN(X))
 ```
+<br>
 
 ## 5. Output Layer
 
@@ -232,6 +239,8 @@ P = softmax(Logits)
 
 - Converts to probability distribution over vocabulary
 
+<br>
+
 ## 6. Training Phase
 
 > Next token prediction in training phase is not autoregressive — everything runs in parallel
@@ -245,6 +254,8 @@ L = -∑ log P(y_t | y_<t, x)
 ```
 
 - Model learns next-token prediction
+
+<br>
 
 ## 7. Inference Phase
 
@@ -260,6 +271,8 @@ Steps:
 - Repeat
 
 - Stop at `<end>`
+
+<br>
 
 ## 8. KV Caching
 
@@ -283,6 +296,8 @@ V = [V; v_t]
 
 - Reduces complexity from O(n²) → O(n)
 
+<br>
+
 ## 9. Beam Search
 
 > Chooses top_k next token predictions at each step
@@ -299,40 +314,26 @@ Score = sum(log probabilities) / length^α
 
 - This is because, longer sentences can have higher value of sum(log probabilities) 
 
-## 10. Key Concepts Summary
 
-- Encoder: Understands input
-
-- Decoder: Generates output
-
-- Attention: Focus on relevant info
-
-- Self-Attention: token-to-token relationship within the same sequence
-
-- Cross-Attention: token-to-token relationship b/w input & output
-
-- FFN: per-token transformation
-
-- Masking: prevents future leakage
-
----
+<hr style="height:5px; border:none; color:#333; background-color:#333;">
 
 <br>
 <br>
+<br>
 
-# Other Concepts
-
-## Special Tokens
+# Special Tokens
 
 > Special tokens are predefined tokens added to the input sequence to guide the transformer’s behavior for specific tasks
 
 > Special tokens keeps the input consistent and helps the transformer understand the input structure
 
+<br>
 
-### CLS (Classification Token) 
+## CLS (Classification Token) 
 > Placed at the beginning of the input sequence
 
-- Represents the entire sequence  
+- Represents the entire sequence
+
 - Final hidden state of this token is used for classification tasks  
 
 Example: <br>
@@ -340,12 +341,13 @@ Example: <br>
 
 
 Used in:
-- Text classification  
+- Text classification
+
 - Sentiment analysis  
 
----
+<br>
 
-### SEP (Separator Token) 
+## SEP (Separator Token) 
 > Used to separate different segments of text  
 
 Example: <br>
@@ -354,31 +356,33 @@ Example: <br>
 
 Used in:
 - Sentence pair classification  
+
 - Question answering  
 
----
+<br>
 
-### PAD (Padding Token)
+## PAD (Padding Token)
 > Used to make all sequences in a batch the same length  
 
 - Ensures efficient parallel processing  
+
 - Ignored during attention using masking  
 
 Example: <br>
 [I, love, AI, PAD, PAD]
 
+<br>
 
----
-
-### Truncation
+## Truncation
 > Cuts longer sequences to a fixed maximum length  
 
 - Prevents memory overflow  
+
 - Ensures consistent input size  
 
----
+<br>
 
-### MASK Token
+## MASK Token
 > Used in masked language modeling (MLM)  
 
 - Model predicts the masked word using context  
@@ -387,12 +391,11 @@ Example: <br>
 I love [MASK] life
 
 
-Used in:
-- Pretraining models like BERT  
+Used in: Pretraining models like BERT  
 
----
+<br>
 
-### Task-Specific Tokens
+## Task-Specific Tokens
 
 > Custom tokens introduced for specific tasks  
 
@@ -401,9 +404,116 @@ Examples: <br>
 
 
 - Helps model distinguish different roles in input  
+
 - Common in:
+
   - Machine translation  
+
   - Instruction tuning  
+  
   - Multi-task learning  
 
----
+<hr style="height:5px; border:none; color:#333; background-color:#333;">
+
+<br>
+<br>
+<br>
+
+# Retrieval-Augmented Generation (RAG)
+
+<p align="center">
+  <img src="assets/rag.png" width="400"/>
+</p>
+
+<br>
+
+## 1. Overview
+
+- RAG enhances LLMs by incorporating external knowledge during inference  
+
+- Instead of relying only on pre-trained knowledge, the model retrieves relevant information and uses it to generate grounded responses  
+
+<br>
+
+## 2. Pipeline
+
+RAG consists of three main stages:
+
+### 2.1 Indexing
+
+> Preprocessing and storing data in a form suitable for efficient retrieval
+
+Steps:
+
+- Load raw documents (PDFs, text, repositories, etc.)
+
+- Split documents into chunks
+
+- Convert chunks into embeddings
+
+- Store embeddings in a vector database (FAISS, Chroma, etc.)
+
+Key points:
+
+- Chunk size impacts retrieval quality  
+
+- Overlapping chunks help preserve context  
+
+- Good embeddings are critical for semantic search  
+
+
+### 2.2 Retrieval
+
+> Responsible for fetching the most relevant and **diverse** chunks of data
+
+Steps:
+
+- Convert user query into embeddings  
+
+- Search in a vector database (FAISS, Chroma, etc.)  
+
+- Retrieve top-k relevant documents  
+
+Key points:
+
+- Relevance is important  
+
+- **Diversity is equally important**  
+
+- Each chunk should contribute **new information**
+
+
+### 2.3 Augmented Generation
+
+> Combines retrieved context with user query and feeds it to the LLM
+
+Final Prompt = User Query + Retrieved Context
+
+- LLM generates response using both query and retrieved data  
+
+- Produces context-aware and grounded outputs  
+
+<br>
+
+## 3. Advantages
+
+- Not resource-heavy (compared to fine-tuning)  
+
+- No need to pass entire dataset in the prompt  
+
+- Reduces hallucinations by grounding responses  
+
+<br>
+
+## 4. Drawbacks
+
+- Increased latency due to real-time retrieval  
+
+- Quality of retrieved docs influences the model's response  
+
+<hr style="height:5px; border:none; color:#333; background-color:#333;">
+
+<br>
+<br>
+<br>
+
