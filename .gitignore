@@ -1,7 +1,8 @@
 # saved models
 models/
 
-# saved vector db
+# saved dbs
+db/
 vectordb/
 
 # misc
