@@ -1,7 +1,7 @@
 # Transformer Architecture
 
 <p align="center">
-  <img src="assets/transformer.png" width="400"/>
+  <img src="assets/transformer.png" width="500"/>
 </p>
 
 <br>
@@ -422,7 +422,7 @@ Examples: <br>
 # Retrieval-Augmented Generation (RAG)
 
 <p align="center">
-  <img src="assets/rag.png" width="400"/>
+  <img src="assets/rag.png" width="600"/>
 </p>
 
 <br>
@@ -516,4 +516,267 @@ Final Prompt = User Query + Retrieved Context
 <br>
 <br>
 <br>
+
+# Speech Recognition (ASR)
+
+<p align="center">
+  <img src="assets/asr.png" width="800"/>
+</p>
+
+<br>
+
+## 1. Overview
+
+> Automatic Speech Recognition (ASR) converts spoken audio into text
+
+**Phoneme**: the smallest unit of sound that distinguishes one word from another
+
+Pipeline:
+
+```
+Audio Signal Processing -> Feature Extraction -> Acoustic Modeling -> Language Modeling -> Decoding -> Text
+```
+
+<br>
+
+## 2. Audio Signal Processing
+
+### 2.1 Signal Capture
+
+> A microphone converts acoustic (sound) waves in the environment into an analog electrical signal
+
+### 2.2 Analog-to-Digital Conversion (ADC)
+
+> Converts the analog signal into a digital signal so machines can store and process it easily
+
+**Sampling**
+
+> Multiple snapshots of the audio waveform are taken at fixed intervals
+
+- Each sample captures the amplitude (loudness) of the sound at that specific moment
+
+- More samples per second (higher sampling rate) → better quality (e.g. 16 kHz is common for speech, 44.1 kHz for music)
+
+**Quantization**
+
+> Each sample's amplitude value is rounded off to the nearest of a fixed set of levels
+
+- More levels → better quality, less quantization error
+
+### 2.3 Framing
+
+> Grouping consecutive samples into small, overlapping chunks
+
+- Framing is needed because a single sample is too short to be meaningful on its own
+
+- Chunks (frames) need to be long enough to capture patterns and features
+
+```
+Frame 1: samples 1   - 128
+Frame 2: samples 64  - 192
+Frame 3: samples 128 - 256
+```
+
+- Frames overlap to help ensure no detail is lost at frame boundaries
+
+### 2.4 Preprocessing
+
+- **Noise reduction**: removes background noise — however, models also need to learn to recognize speech in noisy environments, so a balance is needed between cleaning the signal and preserving realistic variation
+
+- **Normalization**: adjusts signal levels to maintain consistency across different audio samples
+
+- **Resampling**: changes the sample rate of an audio signal to match the requirements of an ML model, or to combine datasets recorded at different rates
+
+- **Data Augmentation**: used when data is limited — creates new audio samples from existing ones by applying transformations (e.g. pitch shift, time-stretch, added noise)
+
+- **Segmentation (Voice Activity Detection)**: identifies and isolates the sections of audio where speech is present
+
+- **Compression**: reduces audio data size while preserving as much of the original quality as possible
+
+<br>
+
+## 3. Feature Extraction
+
+> Converts preprocessed audio into a compact set of numbers that highlight the properties most relevant to recognizing speech
+
+Key audio features: **pitch, loudness, rhythm, timbre**
+
+### 3.1 Time Domain
+
+> Features extracted directly from the raw audio waveform
+
+- Captures volume/amplitude fluctuations over time
+
+- Helps identify the start, stop, and loudness variations of speech
+
+### 3.2 Frequency Domain
+
+> Captures the different tones and frequencies present in the audio
+
+- Useful for distinguishing vowels, consonants, and pitch
+
+### 3.3 Time-Frequency Domain
+
+> Captures how the signal's spectral (frequency) content changes over time
+
+### 3.4 Fourier Transform
+
+**Discrete Fourier Transform (DFT)**
+
+> Converts a signal from the time domain to the frequency domain
+
+- Helps identify which frequencies/components are present in the sound
+
+- Does **not** reveal how those frequencies vary over time
+
+**Short-Time Fourier Transform (STFT)**
+
+> Applies the DFT to short, overlapping frames to show how frequencies vary over time
+
+- Produces a spectrogram — shows which frequencies are present and when they appear
+
+- Used to identify phonemes
+
+### 3.5 MFCCs (Mel-Frequency Cepstral Coefficients)
+
+> A compact feature representation designed to mimic human hearing
+
+- Human ears are more sensitive to certain (mid-range) frequencies — we hear the frequency range where most speech happens much better than very high or very low frequencies
+
+- The Mel scale warps frequency to reflect this sensitivity, so MFCCs emphasize the ranges that matter most for speech
+
+- Enables the system to process sound more like the human auditory system does
+
+- One of the most widely used feature sets fed into acoustic models
+
+<br>
+
+<p align="center">
+  <img src="assets/mfcc.png" width="800"/>
+</p>
+
+<br>
+
+## 4. Acoustic and Language Modeling
+
+### 4.1 Acoustic Model
+
+> Identifies phonemes — focuses on individual sounds in the audio
+
+### 4.2 Language Model
+
+> Uses individual phonemes/words to piece together whole words and sentences
+
+- Estimates the likelihood of the possible word sequences that could be formed from the given phonemes and chooses the most probable one
+
+- Uses context and grammar to make this selection (e.g. distinguishing "recognize speech" from "wreck a nice beach")
+
+<br>
+
+## 5. Acoustic Model Approaches
+
+### 5.1 HMMs (Hidden Markov Models)
+
+> A statistical model where each state represents a phoneme
+
+- Models the probability of transitioning from one phoneme to the next, and the likelihood of certain observable features given a phoneme
+
+- Predicts the next phoneme based only on the current one (the Markov assumption)
+
+**Limitations**:
+
+- Struggle with complex speech patterns — e.g. when speech speeds up or slows down — because they only consider the previous state, not the full sequence context
+
+- Rely on hand-engineered features and typically pair with a separate language model
+
+### 5.2 Deep Learning Approaches
+
+> Simple statistical models look at each sound in isolation and don't consider order. Neural networks instead analyze how sounds relate to one another, helping them understand speaking rate, accent, context, and structure
+
+- **CNNs**: can analyze spectrogram images to identify local patterns like phonemes and words
+
+- **RNNs**: process audio sequentially, carrying a hidden state forward to capture context from previous time steps
+
+- **LSTM**: an RNN variant with gating mechanisms that better retains long-range dependencies and reduces vanishing-gradient issues
+
+- **Transformers**: handle the entire input sequence in parallel via self-attention
+  - Audio segments are fed in → encoder learns patterns and features → decoder generates the output word sequence
+  - Better accuracy and efficiency than RNNs/LSTMs
+  - Can handle longer sequences and capture better long-range context
+
+<br>
+
+## 6. End-to-End Architectures
+
+> Modern ASR systems increasingly replace the separate HMM + acoustic model + language model pipeline with a single neural network trained end-to-end on audio-to-text pairs
+
+### 6.1 CTC (Connectionist Temporal Classification)
+
+> A loss function that lets a model align variable-length audio input with a shorter text output, without needing frame-level alignment labels
+
+- Introduces a special "blank" token to absorb repeated or non-informative frames
+
+- Assumes each output step is conditionally independent of the others, which limits how well it models fluent language on its own
+
+### 6.2 Encoder-Decoder (Attention-Based)
+
+> Encoder processes the full audio sequence into contextual representations; decoder generates output tokens one at a time while attending back to the encoder output
+
+- Not limited by CTC's independence assumption, since each output token is conditioned on previously generated tokens
+
+- Basis for models like Whisper
+
+### 6.3 RNN-T (RNN Transducer)
+
+> Combines an audio encoder, a label (text) encoder that predicts the next token from previous tokens, and a joint network that combines both to predict the next output token
+
+- Naturally supports streaming/online recognition, since it doesn't need to see the entire input before producing output — unlike standard encoder-decoder models
+
+### 6.4 Whisper
+
+> An encoder-decoder Transformer trained on large-scale, weakly-supervised, multilingual audio-text data
+
+- A single model handles transcription, translation, and language identification
+
+- Robust to noise, accents, and diverse audio conditions due to the scale and diversity of its training data
+
+### 6.5 wav2vec 2.0
+
+> A self-supervised model that learns speech representations from raw, unlabeled audio, then is fine-tuned on a small amount of labeled data
+
+- Pretraining masks spans of the latent audio representation and trains the model to identify the correct masked segment via contrastive learning — conceptually similar to BERT's masked language modeling
+
+- Significantly reduces the amount of labeled speech data needed to reach strong accuracy
+
+<br>
+
+## 7. Evaluation
+
+**Word Error Rate (WER)**
+
+> The standard metric used to measure ASR accuracy — compares the predicted transcript to the reference (ground-truth) transcript
+
+```
+WER = (S + D + I) / N
+```
+
+- S = substitutions, D = deletions, I = insertions (the edit operations needed to turn the prediction into the reference)
+
+- N = number of words in the reference transcript
+
+- Lower WER = better performance
+
+**CER (Character Error Rate)**
+
+> Same idea as WER, but computed over characters instead of words
+
+```
+CER = (S + D + I) / N
+```
+
+- S, D, I = substitution/deletion/insertion edits at the character level
+
+- N = number of characters in the reference transcript
+
+- Useful for languages without clear word boundaries (e.g. Mandarin, Japanese), and gives a more fine-grained signal than WER — a model can have a high WER but a low CER if it's making small, near-miss spelling errors rather than picking the wrong word entirely
 
