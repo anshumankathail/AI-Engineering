@@ -185,7 +185,7 @@ Attention = softmax((QK^T + M) / √d_k) V
 ### 4.2 Add & Norm
 
 ```
-X = LayerNorm(X + FFN(X))
+X = LayerNorm(X + MaskedSelfAttention(X))
 ```
 
 ### 4.3 Cross Attention
@@ -205,7 +205,7 @@ Attention = softmax(QK^T / √d_k) V
 ### 4.4 Add & Norm
 
 ```
-X = LayerNorm(X + FFN(X))
+X = LayerNorm(X + CrossAttention(X))
 ```
 
 ### 4.5 Feed Forward Network
@@ -726,6 +726,16 @@ Key audio features: **pitch, loudness, rhythm, timbre**
 
 - Basis for models like Whisper
 
+**Pipeline in practice:**
+
+1. **Preprocessing** — audio is converted into a log-mel spectrogram (the actual input to the model), with mel features normalized (mean/variance) so quieter and louder audio are processed evenly
+
+2. **Acoustic Modeling (Encoder)** — the encoder processes the mel-spectrogram using self-attention, building a latent representation that captures the features essential for recognition (e.g. phoneme-like information) across the full audio sequence in parallel
+
+3. **Language Modeling (Decoder)** — the decoder autoregressively predicts subword (BPE) tokens, cross-attending to the encoder's latent representation and using previously generated tokens to keep the transcription coherent; in models like Whisper, the decoder is multitask, with special tokens conditioning it to transcribe, translate, detect language, or predict timestamps
+
+4. **Post-processing** — predicted subword tokens are detokenized into text, punctuation is normalized, letters are capitalized, and special characters are handled
+
 ### 6.3 RNN-T (RNN Transducer)
 
 > Combines an audio encoder, a label (text) encoder that predicts the next token from previous tokens, and a joint network that combines both to predict the next output token
@@ -736,9 +746,9 @@ Key audio features: **pitch, loudness, rhythm, timbre**
 
 > An encoder-decoder Transformer trained on large-scale, weakly-supervised, multilingual audio-text data
 
-- A single model handles transcription, translation, and language identification
+- **Weakly-supervised**: trained on audio paired with imperfect, uncleaned transcripts (e.g. captions scraped from the internet) instead of carefully human-verified labels — scale compensates for the lower per-example label quality
 
-- Robust to noise, accents, and diverse audio conditions due to the scale and diversity of its training data
+- Training scale and diversity (rather than architectural novelty) is the main driver of its robustness to noise, accents, and diverse audio conditions
 
 ### 6.5 wav2vec 2.0
 
@@ -779,4 +789,3 @@ CER = (S + D + I) / N
 - N = number of characters in the reference transcript
 
 - Useful for languages without clear word boundaries (e.g. Mandarin, Japanese), and gives a more fine-grained signal than WER — a model can have a high WER but a low CER if it's making small, near-miss spelling errors rather than picking the wrong word entirely
-
